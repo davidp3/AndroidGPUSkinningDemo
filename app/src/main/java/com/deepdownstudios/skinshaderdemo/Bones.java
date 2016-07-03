@@ -26,7 +26,7 @@ public abstract class Bones {
 
     /**
      * Stores the inverse bind pose transformations in a new instance of the bone hierarchy.
-     * @param bones The bone transformations in their parent-bone-to-bone-space bind configuration.
+     * @param bones The bone transformations in their bone-to-parent-bone-space bind configuration.
      * @return      A copy of the inverse bone transformations in their bone-to-model-space bind configuration.
      */
     static List<Bone> calculateInvBindPose(List<Bone> bones) {
@@ -35,15 +35,15 @@ public abstract class Bones {
             ret.add(bone.copy());
         }
 
-        // Bones start as parent/bone (ie bone-to-parent) transformations.
+        // Bones start as parent/bone (ie bone-to-parent-bone) transformations.
 
         // Compose the bone's transformations with a pre-order traversal of the skeleton.
-        // Result will be model/bone (ie bone-to-model) transformations.
+        // Result will be bone/model (ie model-to-bone) transformations.
         // ("Model" space here is often referred to as skin space or skin-local space.)
         calculatePose(ret);
 
         // Invert the pose transformations to give a the inverse bind pose.
-        // Result will be bone/model (ie model-to-bone) transformations.
+        // Result will be bone/model (ie bone-to-model) transformations.
         for (Bone bone : ret) {
             // Invert the transformation by transforming the translation with the inverse-rotation and
             // then inverting the angle and new translation.
@@ -92,6 +92,10 @@ public abstract class Bones {
                 // but not rotated to align with it's coordinate frame.  This was
                 // probably natural in the modeling tool as it makes sense for an animator.
                 // Otherwise, this would be a simple RigidTransform.multiply().
+
+                // Keyframes are a "unitless" transform -- the keyframe transformations define a
+                // delta for the bone transformation -- they do not introduce a new coordinate
+                // space.  So the bone.transform is still in parent/local-bone units.
                 bone.transform = bone.transform.animCompose(animTform);
             }
 
@@ -100,8 +104,10 @@ public abstract class Bones {
 
             Bone parent = bones.get(bone.parentIdx);
             // MATH ALERT:
+            // Remember, the parent has already had its transformation updated so it
+            // maps from parent-bone-space to model space (model/parent).
             // bone.transform = parent.transform * bone.transform is
-            // bone.transform = world/parent * parent/local-bone = model/local-bone
+            // bone.transform = model/parent * parent/local-bone = model/local-bone
             // meaning the new transform maps from local bone coordinates to model coordinates.
             bone.transform = parent.transform.multiply(bone.transform);
         }

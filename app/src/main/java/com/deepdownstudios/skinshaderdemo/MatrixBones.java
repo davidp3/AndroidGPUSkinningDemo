@@ -22,18 +22,18 @@ public class MatrixBones extends Bones {
      */
     public MatrixBones(Animation animation, Skeleton skeleton, double delta) {
         List<Bone> bones = skeleton.bones;
-        // Calculate the (potentially animated) model-to-bone matricies.
         mTforms = new float[bones.size() * 16];
 
         List<Bone> bonesCopy = new ArrayList<>();
         for (Bone bone: bones)
             bonesCopy.add(bone.copy());
 
+        // Calculate the (potentially animated) bone-to-model matricies.
         calculatePose(bonesCopy, animation, delta);
 
-        // MATH ALERT: Multiply the invBindPose transformations (which map bone-to-model-space, or model/bone)
-        // by mTforms (model-to-bone or bone/model).  So
-        // invBindPose * mTforms = model/bone * bone/model = model/model = a "unitless"
+        // MATH ALERT: Multiply the invBindPose transformations (which map model-to-bone-space, or bone/model)
+        // by mTforms (bone-to-model or model/bone).  So
+        // mTforms * invBindPose = model/bone * bone/model = a "unitless"
         // transformation that has no inherent coordinate system.  Which is good because
         // the skeletal transformation maps from a model space back into itself.
         // In the shader, you then also apply MVP as you do to position any object.
