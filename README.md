@@ -26,3 +26,5 @@ But it's also a prety good implementation of HW skinning, if I do say so myself.
 fully working examples seem to be in very short supply.  I plan to beef up this non-code-based
 description in the near future.
 
+<img src="https://raw.githubusercontent.com/davidp3/AndroidGPUSkinningDemo/master/etc/Screenshot_20160703-094345.png" width="360"/>
+<img src="https://raw.githubusercontent.com/davidp3/AndroidGPUSkinningDemo/master/etc/Screenshot_20160703-094419.png" width="360"/>
