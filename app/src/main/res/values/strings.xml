@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Skin Shader Demo</string>
+
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="gles_2_required_msg">GLES 2.0 is not supported by this device.\nThis application requires GLES 2.0.</string>
+    <string name="canvas_msg">Touch anywhere to change model, animation, or shader</string>
+</resources>
