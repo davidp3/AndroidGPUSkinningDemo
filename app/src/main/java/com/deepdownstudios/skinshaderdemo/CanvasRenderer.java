@@ -14,16 +14,17 @@ import java.lang.ref.WeakReference;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+/**
+ * Describes this specific app's behavior.  We load and display one animated model
+ * (AnimationRenderer) at a time.  On clicks, we move to the next
+ * model/animation/blending mechanism.
+ */
 class CanvasRenderer implements GLSurfaceView.Renderer, View.OnClickListener {
 
     public CanvasRenderer(GLSurfaceView glSurfaceView, TextView modelInfoView) {
         mWeakGLSurfaceView = new WeakReference<>(glSurfaceView);
         mModelInfoView = modelInfoView;
-        mClickCount = 0;
-        mAnimDescs = new AnimDescriptions(ModelData.MODEL_ANIMS, mModelCache);
-
-        mCallOnInit = true;
-        mAnimationRenderer = mAnimDescs.getAnimRenderer(0);
+        mAnimationRenderer = getAnimRenderer(0);
 
         String label = mAnimationRenderer.mModelName + " : " +
                 mAnimationRenderer.mAnimName + " - " +
@@ -68,14 +69,14 @@ class CanvasRenderer implements GLSurfaceView.Renderer, View.OnClickListener {
 
     public void onSurfaceChanged(GL10 glUnused, int width, int height) {
         GLES20.glViewport(0, 0, width, height);
-        double ratio = (double) width / height;
-        Matrix.frustumM(mProjMatrix, 0, -(float)ratio, (float)ratio, -1, 1, 0.6f, 100.0f);
+        float ratio = (float)width / (float)height;
+        Matrix.frustumM(mProjMatrix, 0, -ratio, ratio, -1, 1, 0.6f, 100.0f);
 
         // We lost the GL context.  All of our cached GL objects are gone.
         // We should also recreate the AnimationRenderer since it holds e.g.
         // shader programs.
         ModelData.TEXTURE_CACHE.clear();
-        mModelCache.clear();
+        ModelData.MODEL_CACHE.clear();
         setModelInfo(mClickCount);
     }
 
@@ -102,7 +103,7 @@ class CanvasRenderer implements GLSurfaceView.Renderer, View.OnClickListener {
     }
 
     public void onTrimMemory(int level) {
-        mModelCache.onTrimMemory(level);
+        ModelData.MODEL_CACHE.onTrimMemory(level);
         ModelData.TEXTURE_CACHE.onTrimMemory(level);
     }
 
@@ -125,7 +126,7 @@ class CanvasRenderer implements GLSurfaceView.Renderer, View.OnClickListener {
                 }
 
                 mCallOnInit = true;
-                mAnimationRenderer = mAnimDescs.getAnimRenderer(index);
+                mAnimationRenderer = getAnimRenderer(index);
                 // For thread safety, build this string before, not in, the post()-ed Runnable.
                 final String label = mAnimationRenderer.mModelName + " : " +
                         mAnimationRenderer.mAnimName + " - " +
@@ -145,14 +146,43 @@ class CanvasRenderer implements GLSurfaceView.Renderer, View.OnClickListener {
         });
     }
 
-    private final Cache<Model> mModelCache = new Cache<>();
+    public AnimationRenderer getAnimRenderer(int index) {
+        int animDescriptorCount = getAnimDescriptorCount();
+        index = index % animDescriptorCount;
 
-    private AnimDescriptions mAnimDescs;
+        int model = 0;
+        while (model < mAnimSpecs.length) {
+            int nDescs = mAnimSpecs[model].anims.length * AnimationRenderer.AnimBlendType.values().length;    // There are 3 blend types
+            if (index >= nDescs) {
+                index -= nDescs;
+                model++;
+            } else {
+                return new AnimationRenderer(mAnimSpecs[model].cachedSourceModel,
+                        mAnimSpecs[model].model,        // model name
+                        mAnimSpecs[model].anims[index / AnimationRenderer.AnimBlendType.values().length],   // anim name
+                        index / AnimationRenderer.AnimBlendType.values().length,    // anim index
+                        AnimationRenderer.AnimBlendType.values()[index % AnimationRenderer.AnimBlendType.values().length]); // shader blend mechanism
+            }
+        }
+        throw new IllegalArgumentException("There must be a math bug here or index was too big.");
+    }
+
+    public int getAnimDescriptorCount() {
+        int model = 0;
+        int count = 0;
+        while (model < mAnimSpecs.length) {
+            count += mAnimSpecs[model].anims.length * AnimationRenderer.AnimBlendType.values().length;
+            model++;
+        }
+        return count;
+    }
+
+    private ModelData.AnimModelSpec[] mAnimSpecs = ModelData.MODEL_ANIMS;
 
     @SuppressWarnings("unused")
     private static String TAG = "CanvasRenderer";
 
-    private int mClickCount;
+    private int mClickCount = 0;
 
     private WeakReference<GLSurfaceView> mWeakGLSurfaceView;
     private TextView mModelInfoView;
@@ -161,5 +191,5 @@ class CanvasRenderer implements GLSurfaceView.Renderer, View.OnClickListener {
     private float[] mProjMatrix = new float[16];
     private float[] mVMatrix = new float[16];
     private float[] mEyeLightPos = new float[4];
-    private boolean mCallOnInit;
+    private boolean mCallOnInit = true;
 }

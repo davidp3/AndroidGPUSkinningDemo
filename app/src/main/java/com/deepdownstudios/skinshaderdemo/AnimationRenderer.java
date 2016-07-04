@@ -16,7 +16,7 @@ import com.deepdownstudios.util.Util;
  */
 @SuppressLint("Assert")
 public class AnimationRenderer {
-    public AnimationRenderer(SourcedCache<Model> modelCache, String modelName,
+    public AnimationRenderer(CachedSource<Model> modelCache, String modelName,
                              String animName,
                              int animIndex,
                              AnimBlendType animBlendType) {
@@ -81,7 +81,7 @@ public class AnimationRenderer {
     public final String mModelName;
     public final String mAnimName;
     private final int mAnimIndex;
-    public final SourcedCache<Model> mModelCache;
+    public final CachedSource<Model> mModelCache;
     public final AnimBlendType mAnimBlendType;
 
     private Model mModel;

@@ -4,7 +4,7 @@ package com.deepdownstudios.skinshaderdemo;
  * A Cache that is bound to a Source so that it can construct items
  * that are requested but not found.
  */
-public class SourcedCache<V> extends Cache<V> implements Source<V> {
+public class CachedSource<V> extends Cache<V> implements Source<V> {
 
     private final Cache<V> mCache;
     private Source<V> mSource;
@@ -12,7 +12,7 @@ public class SourcedCache<V> extends Cache<V> implements Source<V> {
     /**
      * Bind an existing cache to an existing source.
      */
-    public SourcedCache(Cache<V> cache, Source<V> source) {
+    public CachedSource(Cache<V> cache, Source<V> source) {
         mCache = cache;
         mSource = source;
     }
@@ -21,7 +21,7 @@ public class SourcedCache<V> extends Cache<V> implements Source<V> {
      * Bind a new cache to an existing source.
      */
     @SuppressWarnings("unused")
-    public SourcedCache(Source<V> source) {
+    public CachedSource(Source<V> source) {
         mCache = new Cache<>();
         mSource = source;
     }
@@ -32,7 +32,11 @@ public class SourcedCache<V> extends Cache<V> implements Source<V> {
      * @return      The entity.
      */
     public V fetch(String name) {
-        return fetch(name, mSource);
+        return mCache.fetch(name, mSource);
+    }
+
+    public V fetch(String name, Source<V> source) {
+        return mCache.fetch(name, source);      // ignores mSource
     }
 
     @Override
@@ -40,6 +44,15 @@ public class SourcedCache<V> extends Cache<V> implements Source<V> {
         return mSource.load();
     }
 
+    @Override
+    public void onTrimMemory(int level) {
+        mCache.onTrimMemory(level);
+    }
+
+    public void clear() {
+        mCache.clear();
+    }
+    
     @SuppressWarnings("unused")
     public Cache<V> getCache() {
         return mCache;
