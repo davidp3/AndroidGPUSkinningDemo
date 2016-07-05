@@ -18,12 +18,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.deepdownstudios.skinshaderdemo.ByteBufferModel.Animation;
-import static com.deepdownstudios.skinshaderdemo.ByteBufferModel.Bone;
-import static com.deepdownstudios.skinshaderdemo.ByteBufferModel.Mesh;
-import static com.deepdownstudios.skinshaderdemo.ByteBufferModel.RigidTransform;
-import static com.deepdownstudios.skinshaderdemo.ByteBufferModel.Skeleton;
-import static com.deepdownstudios.skinshaderdemo.ByteBufferModel.Vertex;
+import static com.deepdownstudios.skinshaderdemo.BasicModel.Animation;
+import static com.deepdownstudios.skinshaderdemo.BasicModel.Bone;
+import static com.deepdownstudios.skinshaderdemo.BasicModel.Mesh;
+import static com.deepdownstudios.skinshaderdemo.BasicModel.RigidTransform;
+import static com.deepdownstudios.skinshaderdemo.BasicModel.Skeleton;
+import static com.deepdownstudios.skinshaderdemo.BasicModel.Vertex;
 
 /**
  * Handles OGRE .mesh and .skeleton files.
@@ -80,7 +80,7 @@ public class OgreModelSource implements Source<Model> {
         try {
             bbModel = loadBB(meshXpp, skelXpp);
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to build ByteBufferModel for mesh resource : " +
+            throw new IllegalStateException("Failed to build BasicModel for mesh resource : " +
                     mMeshResourceId + " and skel resource : " + mSkelResourceId, e);
         }
         return new VBOModel(mResources, mTextureCache, bbModel);

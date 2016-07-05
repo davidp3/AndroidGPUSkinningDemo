@@ -5,10 +5,10 @@ import android.opengl.GLES20;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.deepdownstudios.skinshaderdemo.ByteBufferModel.Animation;
-import static com.deepdownstudios.skinshaderdemo.ByteBufferModel.Bone;
-import static com.deepdownstudios.skinshaderdemo.ByteBufferModel.RigidTransform;
-import static com.deepdownstudios.skinshaderdemo.ByteBufferModel.Skeleton;
+import static com.deepdownstudios.skinshaderdemo.BasicModel.Animation;
+import static com.deepdownstudios.skinshaderdemo.BasicModel.Bone;
+import static com.deepdownstudios.skinshaderdemo.BasicModel.RigidTransform;
+import static com.deepdownstudios.skinshaderdemo.BasicModel.Skeleton;
 
 /**
  * Animated bones presented as matricies.

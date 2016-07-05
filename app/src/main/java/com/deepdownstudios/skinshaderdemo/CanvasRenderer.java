@@ -28,7 +28,7 @@ class CanvasRenderer implements GLSurfaceView.Renderer, View.OnClickListener {
 
         String label = mAnimationRenderer.mModelName + " : " +
                 mAnimationRenderer.mAnimName + " - " +
-                mAnimationRenderer.mAnimBlendType;
+                mAnimationRenderer.mAnimator;
 
         modelInfoView.setText(label);
     }
@@ -130,7 +130,7 @@ class CanvasRenderer implements GLSurfaceView.Renderer, View.OnClickListener {
                 // For thread safety, build this string before, not in, the post()-ed Runnable.
                 final String label = mAnimationRenderer.mModelName + " : " +
                         mAnimationRenderer.mAnimName + " - " +
-                        mAnimationRenderer.mAnimBlendType;
+                        mAnimationRenderer.mAnimator;
 
                 // The TextView is an Android SDK View, not a GLES object.  So it should be handled
                 // on the main thread, not the GLES thread (or whatever thread we may be on).
@@ -152,16 +152,16 @@ class CanvasRenderer implements GLSurfaceView.Renderer, View.OnClickListener {
 
         int model = 0;
         while (model < mAnimSpecs.length) {
-            int nDescs = mAnimSpecs[model].anims.length * AnimationRenderer.AnimBlendType.values().length;    // There are 3 blend types
+            int nDescs = mAnimSpecs[model].anims.length * Animator.values().length;    // There are 3 blend types
             if (index >= nDescs) {
                 index -= nDescs;
                 model++;
             } else {
                 return new AnimationRenderer(mAnimSpecs[model].cachedSourceModel,
                         mAnimSpecs[model].model,        // model name
-                        mAnimSpecs[model].anims[index / AnimationRenderer.AnimBlendType.values().length],   // anim name
-                        index / AnimationRenderer.AnimBlendType.values().length,    // anim index
-                        AnimationRenderer.AnimBlendType.values()[index % AnimationRenderer.AnimBlendType.values().length]); // shader blend mechanism
+                        mAnimSpecs[model].anims[index / Animator.values().length],   // anim name
+                        index / Animator.values().length,    // anim index
+                        Animator.values()[index % Animator.values().length]); // shader blend mechanism
             }
         }
         throw new IllegalArgumentException("There must be a math bug here or index was too big.");
@@ -171,13 +171,13 @@ class CanvasRenderer implements GLSurfaceView.Renderer, View.OnClickListener {
         int model = 0;
         int count = 0;
         while (model < mAnimSpecs.length) {
-            count += mAnimSpecs[model].anims.length * AnimationRenderer.AnimBlendType.values().length;
+            count += mAnimSpecs[model].anims.length * Animator.values().length;
             model++;
         }
         return count;
     }
 
-    private ModelData.AnimModelSpec[] mAnimSpecs = ModelData.MODEL_ANIMS;
+    private static final ModelData.AnimModelSpec[] mAnimSpecs = ModelData.MODEL_ANIMS;
 
     @SuppressWarnings("unused")
     private static String TAG = "CanvasRenderer";

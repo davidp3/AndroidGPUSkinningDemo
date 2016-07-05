@@ -52,7 +52,7 @@ public class CachedSource<V> extends Cache<V> implements Source<V> {
     public void clear() {
         mCache.clear();
     }
-    
+
     @SuppressWarnings("unused")
     public Cache<V> getCache() {
         return mCache;

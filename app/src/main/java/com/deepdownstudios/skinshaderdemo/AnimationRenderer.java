@@ -19,12 +19,12 @@ public class AnimationRenderer {
     public AnimationRenderer(CachedSource<Model> modelCache, String modelName,
                              String animName,
                              int animIndex,
-                             AnimBlendType animBlendType) {
+                             Animator animator) {
         mModelCache = modelCache;
         mModelName = modelName;
         mAnimName = animName;
         mAnimIndex = animIndex;
-        mAnimBlendType = animBlendType;
+        mAnimator = animator;
     }
 
     @SuppressWarnings("UnusedParameters")
@@ -32,7 +32,7 @@ public class AnimationRenderer {
         mModel = mModelCache.fetch(mModelName);
         long animStartTime = SystemClock.uptimeMillis();
         mAnimModel =
-                mModel.createAnimModel(mAnimName, mAnimIndex, animStartTime/1000.0, mAnimBlendType);
+                mModel.createAnimModel(mAnimName, mAnimIndex, animStartTime/1000.0, mAnimator);
         Util.Assert(mAnimModel != null);
     }
 
@@ -49,40 +49,13 @@ public class AnimationRenderer {
         mAnimModel.draw(mMMatrix, vMatrix, projMatrix, eyeLightPos);
     }
 
-    public enum AnimBlendType {
-        NORMAL {
-            @Override
-            public String toString() { return "matrix"; }
-        },
-        QUAT {
-            @Override
-            public String toString() { return "quaternion"; }
-        },
-        DUAL_QUAT {
-            @Override
-            public String toString() { return "dual quat"; }
-        };
-
-        public Bones getBonesAtTime(ByteBufferModel.Animation animation,
-                                    ByteBufferModel.Skeleton skeleton, double delta) {
-            switch(this) {
-                case NORMAL:
-                    return new MatrixBones(animation, skeleton, delta);
-                case QUAT:
-                    return new QuatBones(animation, skeleton, delta);
-            }
-            Util.Assert(this.equals(DUAL_QUAT));
-            return new DualQuatBones(animation, skeleton, delta);
-        }
-    }
-
     private float[] mMMatrix = new float[16];
 
     public final String mModelName;
     public final String mAnimName;
     private final int mAnimIndex;
     public final CachedSource<Model> mModelCache;
-    public final AnimBlendType mAnimBlendType;
+    public final Animator mAnimator;
 
     private Model mModel;
     private AnimModel mAnimModel;

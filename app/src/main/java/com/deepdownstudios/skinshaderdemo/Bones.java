@@ -2,9 +2,9 @@ package com.deepdownstudios.skinshaderdemo;
 
 import android.util.Pair;
 
-import com.deepdownstudios.skinshaderdemo.ByteBufferModel.Animation;
-import com.deepdownstudios.skinshaderdemo.ByteBufferModel.Bone;
-import com.deepdownstudios.skinshaderdemo.ByteBufferModel.RigidTransform;
+import com.deepdownstudios.skinshaderdemo.BasicModel.Animation;
+import com.deepdownstudios.skinshaderdemo.BasicModel.Bone;
+import com.deepdownstudios.skinshaderdemo.BasicModel.RigidTransform;
 import com.deepdownstudios.util.Util;
 
 import java.util.ArrayList;

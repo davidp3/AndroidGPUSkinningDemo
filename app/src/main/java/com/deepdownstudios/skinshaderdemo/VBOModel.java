@@ -19,7 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.deepdownstudios.skinshaderdemo.ByteBufferModel.Skeleton;
+import static com.deepdownstudios.skinshaderdemo.BasicModel.*;
+import static com.deepdownstudios.skinshaderdemo.BasicModel.Skeleton;
 
 /**
  * A Model that stores its information in a VBO.
@@ -73,8 +74,8 @@ public class VBOModel implements Model {
 
     @Override
     public AnimModel createAnimModel(String animName, int animIndex, double startTime,
-                                     AnimationRenderer.AnimBlendType animBlendType) {
-        return new SkinnedVBOAnimModel(this, getAnim(animName, animIndex), startTime, animBlendType);
+                                     Animator animator) {
+        return new SkinnedVBOAnimModel(this, getAnim(animName, animIndex), startTime, animator);
     }
 
     public void setShaderProgram(int vShaderResource, int pShaderResource) {
@@ -294,9 +295,9 @@ public class VBOModel implements Model {
         }
     }
 
-    private ByteBufferModel.Animation getAnim(String animName, int animIndex) {
+    private Animation getAnim(String animName, int animIndex) {
         if (!animName.isEmpty()) {
-            for (ByteBufferModel.Animation anim : mSkeleton.animations) {
+            for (Animation anim : mSkeleton.animations) {
                 if (anim.name.equals(animName)) {
                     return anim;
                 }
