@@ -1,5 +1,6 @@
 This is a well documented and efficient example of shader-based skinning on Android.  It
-was initially an educational tool for people afraid of the algebra.  The implementation
+was initially an educational tool for people afraid of the algebra.  It handles the Ogre and
+ms3d (Milkshape) export formats.  The implementation
 also tries to highlight some of the many choices inherent in implementing skinning that
 are the reason that so many tutorials offer different math, seemingly without even
 knowing it.  For example, back in the day I wrote a very coordinate-space-aware
