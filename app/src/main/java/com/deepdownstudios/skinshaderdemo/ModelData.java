@@ -1,5 +1,9 @@
 package com.deepdownstudios.skinshaderdemo;
 
+import android.util.Pair;
+
+import java.util.Arrays;
+
 /**
  * Specifies all of the models and animations, as well as serializers and meta-data.
  * This could be serialized from JSON or whatever.
@@ -22,18 +26,19 @@ public class ModelData {
                     new CachedSource<>(MODEL_CACHE,
                             new OgreModelSource(CanvasApplication.getInstance().getResources(),
                                 TEXTURE_CACHE,
-                                R.raw.m_chief_mesh, R.raw.m_chief_skeleton,
-                                R.drawable.masterchief_base,
-                                R.drawable.masterchief_bump_displacement) ))
-/*
+                                R.raw.m_chief_mesh, R.raw.m_chief_skeleton) ))
             , new AnimModelSpec("Ninja",
-                    new String[] { "stealth", "sword", "death", "idle" },
-                    new Ms3dModelSource(CanvasApplication.getInstance().getResources(),
-                            TEXTURE_CACHE,
-                            R.raw.ninja,
-                            Arrays.asList(new Pair<>(15, 30), new Pair<>(45, 59),
-                                            new Pair<>(166, 173), new Pair<>(206, 250) )) )
-*/ /*
+                    new String[] { "walk", "stealth", "punch", "sword", "swipe", "spin", "death", "idle" },
+                    new CachedSource<>(MODEL_CACHE,
+                            new Ms3dModelSource(CanvasApplication.getInstance().getResources(),
+                                TEXTURE_CACHE,
+                                R.raw.ninja,
+                                Arrays.asList(new Pair<>(1, 14), new Pair<>(15, 30),
+                                              new Pair<>(32, 44), new Pair<>(45, 59),
+                                              new Pair<>(60, 68), new Pair<>(134, 145),
+                                              new Pair<>(166, 173), new Pair<>(206, 250)),
+                                1.0/8.0 /* speed coefficient */) ))
+/*
             , new AnimModelSpec("Alien", new String[] { "belly", "licking" },
                   new Ms3dModelSource(CanvasApplication.getInstance().getResources(),
                           TEXTURE_CACHE,

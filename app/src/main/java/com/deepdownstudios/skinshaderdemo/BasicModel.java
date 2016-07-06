@@ -14,7 +14,7 @@ public class BasicModel {
     public static class Mesh {
         public short faces[][];       // nFaces x 3 verts-per-face
         public Vertex verts[];        // nVerts
-        public Material mMaterial = new Material();
+        public ArrayList<RenderPass> mRenderPasses = new ArrayList<>();
     }
 
     public static class Vertex {
@@ -65,7 +65,7 @@ public class BasicModel {
         }
 
         // Similar to this * o (see multiply) but specifically for composing
-        // Ogre animation frames.  The cross-rotation-translaton term that
+        // Ogre animation frames.  The cross-rotation-translation term that
         // is part of multiply is cut from this.
         public RigidTransform animCompose(RigidTransform o) {
             RigidTransform result = new RigidTransform();
@@ -106,8 +106,19 @@ public class BasicModel {
         public List<Bone> invBindPose;                              // nBones
     }
 
+    public static class RenderPass {
+        public Material material;
+    }
+
     public static class Material {
         public int textureResourceId;
         public int bumpResourceId;
+        // Format for these values comes from MS3D file.
+        public float[] ambient = new float[4];
+        public float[] diffuse = new float[4];
+        public float[] specular = new float[4];
+        public float[] emissive = new float[4];
+        public float shininess;
+        public float transparency;
     }
 }

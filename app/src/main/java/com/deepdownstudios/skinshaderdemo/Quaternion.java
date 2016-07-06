@@ -21,6 +21,31 @@ public class Quaternion {
         normalize();
     }
 
+    /**
+     * Create Quaternion that is equivalent to the given Euler rotation.
+     * This definition of Euler angles (I think it corresponds to XZY order)
+     * was determined with the Blender Python MS3D exporter:
+     * https://gitlab.tul.cz/jiri.hnidek/blender/raw/1e3bdcf19846974b11c5a497eea56a34cdec0dde/release/scripts/ms3d_import.py
+     *
+     * @param eulerX Rotation about X axis (yaw)
+     * @param eulerY Rotation about Y axis (pitch)
+     * @param eulerZ Rotation about Z axis (roll)
+     */
+    public Quaternion(double eulerX, double eulerY, double eulerZ) {
+        double c1 = Math.cos(eulerX/2.0);
+        double s1 = Math.sin(eulerX/2.0);
+        double c2 = Math.cos(eulerY/2.0);
+        double s2 = Math.sin(eulerY/2.0);
+        double c3 = Math.cos(eulerZ/2.0);
+        double s3 = Math.sin(eulerZ/2.0);
+        double c1c2 = c1*c2;
+        double s1s2 = s1*s2;
+        values[0] = c1c2*c3 + s1s2*s3;
+        values[1] = s1*c2*c3 - c1*s2*s3;
+        values[2] = c1*s2*c3 + s1*c2*s3;
+        values[3] = c1c2*s3 - s1s2*c3;
+    }
+
     public void set(Quaternion o) {
         values[0] = o.values[0];    values[1] = o.values[1];
         values[2] = o.values[2];    values[3] = o.values[3];
@@ -117,6 +142,12 @@ public class Quaternion {
         return ret;
     }
 
+    /**
+     * Spherically interpolate from this (when weight == 0) to o (when weight == 1.0)
+     * @param o         The quaternion corresponding to weight 1.0
+     * @param weight    The weight of the interpolation.  0 <= weight <= 1.0
+     * @return          The interpolated quaternion.
+     */
     public Quaternion slerp(Quaternion o, double weight) {
         double cosHalf = dot(o);
         // Check for zero angle between quats (implying no need to interpolate)
@@ -141,23 +172,6 @@ public class Quaternion {
                 c * values[0] + oc * o.values[0], c * values[1] + oc * o.values[1],
                 c * values[2] + oc * o.values[2], c * values[3] + oc * o.values[3]);
     }
-
-
-
-/*
-        double[] t = new double[4];
-        double total = 0;
-        for (int i=0; i<4; i++) {
-            t[i] = values[i] * (1.0 - weight) + o.values[i] * (1.0 - weight);
-            total += t[i]*t[i];
-        }
-        total = Math.sqrt(total);
-        for (int i=0; i<4; i++) {
-            t[i] /= total;
-        }
-        return new Quaternion(t[0], t[1], t[2], t[3]);        // TODO: Placeholder
-    }
-    */
 
     private double dot(Quaternion o) {
         double sum = 0;

@@ -1,5 +1,7 @@
 package com.deepdownstudios.skinshaderdemo;
 
+import com.deepdownstudios.util.Util;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -25,12 +27,12 @@ public class ByteBufferModel {
         // that way to correspond with VBOMode.SHADER_ATTRIB_NAMES.
         // A good shader library would do better.
 
-        // These buffers stay synchronized.  The FloatBuffer is just a thin view on the ByteBuffer.
         for(Mesh mesh : meshes) {
             // Vertices
             // nVerts * (3 positions + 2 tex coords + 3 normals + 4 bone indices + 4 bone weights) * 4 bytes each
             int nBytes = mesh.verts.length * (3 + 2 + 3 + 4 + 4) * BYTES_PER_FLOAT;
 
+            // These buffers stay synchronized.  The FloatBuffer is just a thin view on the ByteBuffer.
             ByteBuffer vertByteBuffer = ByteBuffer.allocateDirect(nBytes).order(ByteOrder.nativeOrder());
             FloatBuffer vertFloatBuffer = vertByteBuffer.asFloatBuffer();
 
@@ -66,9 +68,9 @@ public class ByteBufferModel {
             faceShortBuffer.position(0);
             mFaceShortBuffers.add(faceShortBuffer);
 
-
             // Materials
-            mMaterials.add(mesh.mMaterial);
+            Util.Assert(mesh.mRenderPasses.size() > 0);
+            mMaterials.add(mesh.mRenderPasses.get(0).material);
         }
 
         mSkeleton = skeleton;

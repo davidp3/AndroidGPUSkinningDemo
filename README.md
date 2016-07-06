@@ -2,12 +2,9 @@ This is a well documented and efficient example of shader-based skinning on Andr
 was initially an educational tool for people afraid of the algebra.  The implementation
 also tries to highlight some of the many choices inherent in implementing skinning that
 are the reason that so many tutorials offer different math, seemingly without even
-knowing it.  For example, the space that key frames are store in affects the playback
-math (of course) but also affects other performance.  Ogre stores it's
-keyframe translations in model space, which is natural in the modeling tool but leads
-to weird (confusing) equations and poor animation compression.  In a past life, I wrote
-a spline-based animation compression tool for Gamebryo on PS3 and was able to reduce animation
-sizes by over 90% by exploiting similar issues... and using B-splines :).
+knowing it.  For example, back in the day I wrote a very coordinate-space-aware
+spline-based animation compression tool for Gamebryo on PS3 and was able to reduce animation
+sizes by over 90% by choosing spaces where quantization was effective... and using B-splines :)
 
 I present the math in a _units_-like manner as that's the simplest way I know how.  The general
 idea is that transformations map from one coordinate system to another and those coordinate

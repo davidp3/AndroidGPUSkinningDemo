@@ -85,18 +85,10 @@ public abstract class Bones {
                 // Compose the animation transformation on top of the bind pose transform.
                 RigidTransform animTform = getTransformAtTime(animation.keyframes[i], delta);
 
-                // MATH ALERT: The animation's keyframes define bone position relative to
-                // the parent's position but *not in the parent's coordinate
-                // frame*!!!  The position is instead
-                // in the root node's coordinates.  In other words, the positions should be translated
-                // but not rotated to align with it's coordinate frame.  This was
-                // probably natural in the modeling tool as it makes sense for an animator.
-                // Otherwise, this would be a simple RigidTransform.multiply().
-
                 // Keyframes are a "unitless" transform -- the keyframe transformations define a
                 // delta for the bone transformation -- they do not introduce a new coordinate
                 // space.  So the bone.transform is still in parent/local-bone units.
-                bone.transform = bone.transform.animCompose(animTform);
+                bone.transform = bone.transform.multiply(animTform);
             }
 
             if (bone.parentIdx == -1)
@@ -104,7 +96,7 @@ public abstract class Bones {
 
             Bone parent = bones.get(bone.parentIdx);
             // MATH ALERT:
-            // Remember, the parent has already had its transformation updated so it
+            // The parent has already had its transformation updated so it
             // maps from parent-bone-space to model space (model/parent).
             // bone.transform = parent.transform * bone.transform is
             // bone.transform = model/parent * parent/local-bone = model/local-bone
@@ -116,6 +108,10 @@ public abstract class Bones {
     static private RigidTransform getTransformAtTime(
             ArrayList<Pair<Double, RigidTransform>> keyframe, double delta) {
 
+        // For animations that don't start at time 0 (I'm looking at you Milkshape), displace
+        // delta by that amount because delta was based on duration, not some weird local
+        // animation time.
+        delta += keyframe.get(0).first;
         Util.Assert(delta <= keyframe.get(keyframe.size()-1).first);      // Must not exceed animation length!
 
         // Look for the first frame at time >= the time we want

@@ -1,6 +1,7 @@
 package com.deepdownstudios.skinshaderdemo;
 
 import android.opengl.GLES20;
+import android.opengl.Matrix;
 
 import java.util.ArrayList;
 import java.util.List;

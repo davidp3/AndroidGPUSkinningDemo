@@ -87,7 +87,7 @@ class CanvasRenderer implements GLSurfaceView.Renderer, View.OnClickListener {
 
         mEyeLightPos[0] = 5.0f;
         mEyeLightPos[1] = 8.0f;
-        mEyeLightPos[2] = -2.0f;
+        mEyeLightPos[2] = -3.0f;
         mEyeLightPos[3] = 1.0f;     // ignored
 
         Matrix.setLookAtM(mVMatrix, 0,

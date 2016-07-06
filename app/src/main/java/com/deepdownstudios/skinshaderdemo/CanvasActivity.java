@@ -80,6 +80,15 @@ public class CanvasActivity extends Activity {
                     View.SYSTEM_UI_FLAG_FULLSCREEN            // hide sticky
                     | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY      // Status/nav are timed to expire
                     | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);     // Hide nav
+            getWindow().getDecorView().setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
+                @Override
+                public void onSystemUiVisibilityChange(int visibility) {
+                    getWindow().getDecorView().setSystemUiVisibility(
+                            View.SYSTEM_UI_FLAG_FULLSCREEN            // hide status
+                                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY      // Status/nav are timed to expire
+                                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);     // Hide nav
+                }
+            });
         } else {
             // Display an error message to the user.
             setContentView(R.layout.gles_2_required);
@@ -98,8 +107,11 @@ public class CanvasActivity extends Activity {
         // Ideally a game should implement onResume() and onPause()
         // to take appropriate action when the activity looses focus
         super.onResume();
-        if (mGLSurfaceView != null)
-            mGLSurfaceView.onResume();
+
+        if (mGLSurfaceView == null)
+            return;
+
+        mGLSurfaceView.onResume();
     }
 
     @Override
@@ -117,6 +129,14 @@ public class CanvasActivity extends Activity {
         if (mRenderer != null) {
             mRenderer.onTrimMemory(level);
         }
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_FULLSCREEN                      // hide status
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY      // Status/nav are timed to expire
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);     // Hide nav
     }
 
     private GLSurfaceView mGLSurfaceView;

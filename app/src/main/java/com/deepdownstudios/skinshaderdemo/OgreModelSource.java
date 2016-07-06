@@ -1,16 +1,21 @@
 package com.deepdownstudios.skinshaderdemo;
 
 import android.content.res.Resources;
+import android.util.Log;
 import android.util.Pair;
 
+import com.deepdownstudios.skinshaderdemo.BasicModel.Material;
+import com.deepdownstudios.skinshaderdemo.BasicModel.RenderPass;
 import com.deepdownstudios.util.Util;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -30,30 +35,19 @@ import static com.deepdownstudios.skinshaderdemo.BasicModel.Vertex;
  */
 public class OgreModelSource implements Source<Model> {
 
-    private Resources mResources;
-    private Cache<GLESTexture> mTextureCache;
-    private int mMeshResourceId;
-    private int mSkelResourceId;
-    private int mTextureResourceId;
-    private int mBumpResourceId;
-
     /**
      * Create an instance of ... whatever this format is.
+     *
      * @param resources         The Android SDK Resource object for loading files.
      * @param textureCache      Cache of GLES texture IDs.
      * @param meshResourceId    The resource ID of the .mesh file
      * @param skelResourceId    The resource ID of the .skel file
-     * @param textureResourceId The resource ID of the base texture Drawable.
-     * @param bumpResourceId    The resource ID of the bump texture Drawable.
      */
-    public OgreModelSource(Resources resources, Cache<GLESTexture> textureCache, int meshResourceId, int skelResourceId,
-                           int textureResourceId, int bumpResourceId) {
+    public OgreModelSource(Resources resources, Cache<GLESTexture> textureCache, int meshResourceId, int skelResourceId) {
         mResources = resources;
         mTextureCache = textureCache;
         mMeshResourceId = meshResourceId;
         mSkelResourceId = skelResourceId;
-        mTextureResourceId = textureResourceId;
-        mBumpResourceId = bumpResourceId;
     }
 
     @Override
@@ -99,7 +93,7 @@ public class OgreModelSource implements Source<Model> {
         int eventType = skelXpp.next();
         Map<String, Integer> boneNameMap = new HashMap<>();
         while (eventType != XmlPullParser.END_DOCUMENT) {
-            if(eventType == XmlPullParser.START_TAG) {
+            if (eventType == XmlPullParser.START_TAG) {
                 if (skelXpp.getName().equals("bone")) {
                     // bone rest position stuff
                     Util.Assert(curBone == Integer.parseInt(skelXpp.getAttributeValue(null, "id")));
@@ -126,7 +120,7 @@ public class OgreModelSource implements Source<Model> {
 
         // I'm assuming that the format stores bones in a pre-ordering
         // (so parents are always before children).
-        for (int i=1; i < ret.bones.size(); i++) {
+        for (int i = 1; i < ret.bones.size(); i++) {
             Util.Assert(i > ret.bones.get(i).parentIdx);
         }
 
@@ -148,7 +142,7 @@ public class OgreModelSource implements Source<Model> {
 
         int eventType = skelXpp.next();
         while (skelXpp.getName() == null || !skelXpp.getName().equals("animation")) {
-            if(eventType == XmlPullParser.START_TAG) {
+            if (eventType == XmlPullParser.START_TAG) {
                 if (skelXpp.getName().equals("track")) {
                     String boneName = skelXpp.getAttributeValue(null, "bone");
                     Util.Assert(boneNameMap.containsKey(boneName));
@@ -171,7 +165,7 @@ public class OgreModelSource implements Source<Model> {
         double lastTime = -1.0;
         boolean needsSort = false;
         while (skelXpp.getName() == null || !skelXpp.getName().equals("track")) {
-            if(eventType == XmlPullParser.START_TAG) {
+            if (eventType == XmlPullParser.START_TAG) {
                 if (skelXpp.getName().equals("keyframe")) {
                     double time = Double.parseDouble(skelXpp.getAttributeValue(null, "time"));
                     needsSort |= (time <= lastTime);       // make sure key frames are sorted by time
@@ -210,7 +204,7 @@ public class OgreModelSource implements Source<Model> {
         double angle = 0.0, axis[] = new double[3];
         int eventType = skelXpp.next();
         while (skelXpp.getName() == null || (!skelXpp.getName().equals("bone") && !skelXpp.getName().equals("keyframe"))) {
-            if(eventType == XmlPullParser.START_TAG) {
+            if (eventType == XmlPullParser.START_TAG) {
                 // Strangely, the format uses "position" and "rotation" in the skeleton and
                 // "translate" and "rotate" in keyframes.  But the data is the same.
                 if (skelXpp.getName().equals("position") || skelXpp.getName().equals("translate")) {
@@ -238,9 +232,13 @@ public class OgreModelSource implements Source<Model> {
         List<Mesh> meshes = new ArrayList<>();
         int eventType = meshXpp.next();
         while (eventType != XmlPullParser.END_DOCUMENT) {
-            if(eventType == XmlPullParser.START_TAG) {
+            if (eventType == XmlPullParser.START_TAG) {
                 if (meshXpp.getName().equals("submesh")) {
-                    meshes.add(readMesh(meshXpp));
+                    String renderPassFilename = meshXpp.getAttributeValue(null, "material");
+                    ArrayList<RenderPass> passes = readRenderPasses(renderPassFilename);
+                    Mesh mesh = readMesh(meshXpp);
+                    meshes.add(mesh);
+                    mesh.mRenderPasses = passes;
                 }
                 // I'm ignoring the LOD info but, if I cared, I would catch
                 // "lodfacelist" here and read them into meshes using the "faces" code
@@ -253,10 +251,78 @@ public class OgreModelSource implements Source<Model> {
         return meshes;
     }
 
+    /**
+     * Reads Ogre "material" file that describes rendering techniques.  Currently only
+     * properly supports files with one simple render pass.
+     */
+    private ArrayList<RenderPass> readRenderPasses(String renderPassFilename) throws IOException {
+        Material material = readMaterial(renderPassFilename);
+        RenderPass pass = new RenderPass();
+        pass.material = material;
+        ArrayList<RenderPass> passes = new ArrayList<>();
+        passes.add(pass);
+        return passes;
+    }
+
+    private Material readMaterial(String materialFilename) throws IOException {
+
+        materialFilename = stripFilename(materialFilename);
+
+        // Look for the material file in the same resource package as the mesh file.
+        // (This is probably the Application package.)
+        int materialResId =
+                mResources.getIdentifier(materialFilename, "raw",
+                        mResources.getResourcePackageName(mMeshResourceId));
+        if (materialResId <= 0) {
+            throw new IllegalArgumentException("Could not locate material file resource: " + materialFilename);
+        }
+
+        Material ret = new Material();
+        ret.shininess = 1.0f;       // whatever
+        ret.transparency = 1.0f;
+        BufferedReader stream =
+                new BufferedReader(new InputStreamReader(mResources.openRawResource(materialResId)));
+        String line = stream.readLine();
+        while (line != null) {
+            String[] splitLine = line.trim().split(" ");
+            String command = splitLine[0];
+            if (command.equals("ambient")) {
+                for (int i = 0; i < 4; i++) {
+                    ret.ambient[i] = Float.parseFloat(splitLine[i + 1]);
+                }
+            } else if (command.equals("diffuse")) {
+                for (int i = 0; i < 4; i++) {
+                    ret.diffuse[i] = Float.parseFloat(splitLine[i + 1]);
+                }
+            } else if (command.equals("specular")) {
+                for (int i = 0; i < 4; i++) {
+                    ret.specular[i] = Float.parseFloat(splitLine[i + 1]);
+                }
+            } else if (command.equals("emissive")) {
+                for (int i = 0; i < 3; i++) {
+                    ret.emissive[i] = Float.parseFloat(splitLine[i + 1]);
+                }
+                ret.emissive[3] = 1.0f;      // I have no idea what this is
+            } else if (command.equals("texture")) {
+                String textureName = stripFilename(splitLine[1]);
+                Log.d(TAG, "Found texture name " + textureName + " in material file " + materialFilename);
+                ret.textureResourceId =
+                        mResources.getIdentifier(textureName, "drawable",
+                                mResources.getResourcePackageName(mMeshResourceId));
+            } else if (command.equals("texture_bump")) {
+                String textureName = stripFilename(splitLine[1]);
+                Log.d(TAG, "Found bump texture name " + textureName + " in material file " + materialFilename);
+                ret.bumpResourceId =
+                        mResources.getIdentifier(textureName, "drawable",
+                                mResources.getResourcePackageName(mMeshResourceId));
+            }
+            line = stream.readLine();
+        }
+        return ret;
+    }
+
     private Mesh readMesh(XmlPullParser meshXpp) throws IOException, XmlPullParserException {
         Mesh ret = new Mesh();
-        ret.mMaterial.textureResourceId = mTextureResourceId;
-        ret.mMaterial.bumpResourceId = mBumpResourceId;
 
         int curFace = 0;
         int curVert = 0;
@@ -265,7 +331,7 @@ public class OgreModelSource implements Source<Model> {
 
         int eventType = meshXpp.next();
         while (meshXpp.getName() == null || !meshXpp.getName().equals("submesh")) {
-            if(eventType == XmlPullParser.START_TAG) {
+            if (eventType == XmlPullParser.START_TAG) {
                 if (meshXpp.getName().equals("faces")) {
                     Util.Assert(nFaces == -1);
                     nFaces = Integer.parseInt(meshXpp.getAttributeValue(null, "count"));
@@ -279,7 +345,7 @@ public class OgreModelSource implements Source<Model> {
                     Util.Assert(nVerts == -1);
                     nVerts = Integer.parseInt(meshXpp.getAttributeValue(null, "vertexcount"));
                     ret.verts = new Vertex[nVerts];
-                    for (int i=0; i<nVerts; i++) {
+                    for (int i = 0; i < nVerts; i++) {
                         ret.verts[i] = new Vertex();
                     }
                 } else if (meshXpp.getName().equals("position")) {
@@ -298,7 +364,7 @@ public class OgreModelSource implements Source<Model> {
                     ret.verts[vertIdx].boneWeights.add(Double.parseDouble(meshXpp.getAttributeValue(null, "weight")));
                     ret.verts[vertIdx].bones.add(Integer.parseInt(meshXpp.getAttributeValue(null, "boneindex")));
                 }
-            } else if(eventType == XmlPullParser.END_TAG) {
+            } else if (eventType == XmlPullParser.END_TAG) {
                 if (meshXpp.getName().equals("vertexbuffer")) {
                     // The vertexbuffers in each "submesh" all correspond to
                     // the same vertices.  So, when one vertex buffer ends,
@@ -315,4 +381,26 @@ public class OgreModelSource implements Source<Model> {
         Util.Assert(eventType == XmlPullParser.END_TAG);        // we done with "submesh"
         return ret;
     }
+
+    static private String stripFilename(String filename) {
+        filename = filename.toLowerCase();
+        int slashIdx = filename.lastIndexOf('/');
+        if (slashIdx == -1) {
+            slashIdx = filename.lastIndexOf('\\');
+        }
+        if (slashIdx != -1) {
+            filename = filename.substring(slashIdx + 1);
+        }
+        int dotIdx = filename.indexOf('.');
+        if (dotIdx != -1) {
+            filename = filename.substring(0, dotIdx);
+        }
+        return filename;
+    }
+
+    private static final String TAG = "OgreModelSource";
+    private Resources mResources;
+    private Cache<GLESTexture> mTextureCache;
+    private int mMeshResourceId;
+    private int mSkelResourceId;
 }

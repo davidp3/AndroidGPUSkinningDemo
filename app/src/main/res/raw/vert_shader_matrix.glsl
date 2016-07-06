@@ -1,4 +1,4 @@
-#define N_BONE_TFORMS 18
+#define N_BONE_TFORMS 32
 
 // model-space
 attribute highp vec3 aPosition;
