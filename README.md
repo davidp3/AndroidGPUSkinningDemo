@@ -23,5 +23,11 @@ But it's also a prety good implementation of HW skinning, if I do say so myself.
 fully working examples seem to be in very short supply.  I plan to beef up this non-code-based
 description in the near future.
 
+You can find the free Ninja model [here](http://tf3dm.com/3d-model/ninja-48864.html) and the 
+free Halo-like model [here](http://voxels.blogspot.com/2014/03/skinned-skeletal-animation-tutorial.html).
+
 <img src="https://raw.githubusercontent.com/davidp3/AndroidGPUSkinningDemo/master/etc/Screenshot_20160703-094345.png" width="360"/>
 <img src="https://raw.githubusercontent.com/davidp3/AndroidGPUSkinningDemo/master/etc/Screenshot_20160703-094419.png" width="360"/>
+<br>
+<img src="https://raw.githubusercontent.com/davidp3/AndroidGPUSkinningDemo/master/etc/Screenshot_20160706-120353.png" width="360"/>
+<img src="https://raw.githubusercontent.com/davidp3/AndroidGPUSkinningDemo/master/etc/Screenshot_20160706-120436.png" width="360"/>

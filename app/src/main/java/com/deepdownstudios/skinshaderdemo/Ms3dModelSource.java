@@ -448,59 +448,6 @@ public class Ms3dModelSource implements Source<Model> {
         return ret;
     }
 
-/*
-    /// Builds keyframes from ms3d data by aligning all unaligned pos and rot keyframes.
-    /// So if a pos keyframe exists at time T, this makes sure a rot frame does as well.
-    /// It adds no other keyframes.
-    /// It turns out this is not what the animator meant by frames.  So this mechanism doesn't
-    /// align with mAnimFrameRanges.  So we dump it in favor of the one above.
-    private static ArrayList<Pair<Double, RigidTransform>> buildKeyframes(
-            Map<Double, Quaternion> timeToKeyframeRot, Map<Double, double[]> timeToKeyframePos,
-            List<Double> rotTimes, List<Double> transTimes, Double[] times) {
-
-        ArrayList<Pair<Double, RigidTransform>> ret = new ArrayList<>();
-        int ri = 0, ti = 0;     // always points to the _next_ index for rot/trans times
-        for (Double time : times) {
-            // This will be annoying.  We must step through the times array, making one keyframe
-            // per time.  For some, rot will be defined but not trans, the other way around for
-            // others, and both will be defined for some.  Missing values must be gotten through
-            // interpolation, which will be hard since things are stored in HashMaps.  I can
-            // presumably assume that time=0 is in both and is the first time... so we know
-            // which frame to use for the 'previous' value... the most recently found frame
-            // (even if it is partly the result of interpolation!).  The 'next' frame, however, may
-            // be tricky to locate efficiently.  I should probably just take the keys for each Map,
-            // dump them into an array, sort them, and use binary search to find the next key.
-            RigidTransform transform = new RigidTransform();
-            if (rotTimes.get(ri).equals(time)) {
-                transform.quat = timeToKeyframeRot.get(time);
-                ri++;
-            } else {
-                Util.Assert(rotTimes.get(ri) < time);
-                double weight = (time - rotTimes.get(ri)) / (rotTimes.get(ri + 1) - rotTimes.get(ri));
-                transform.quat =
-                        timeToKeyframeRot.get(rotTimes.get(ri))
-                                .slerp(timeToKeyframeRot.get(rotTimes.get(ri + 1)), weight);
-                // Leave ri alone.  The _next_ frame is still ri+1
-            }
-            if (transTimes.get(ti).equals(time)) {
-                transform.pos = timeToKeyframePos.get(time);
-                ti++;
-            } else {
-                Util.Assert(transTimes.get(ti) < time);
-                double weight = (time - transTimes.get(ti)) / (transTimes.get(ti + 1) - transTimes.get(ti));
-                for (int j = 0; j < 3; j++) {
-                    transform.pos[j] =
-                            (1.0 - weight) * timeToKeyframePos.get(transTimes.get(ti))[j] +
-                                    weight * timeToKeyframePos.get(transTimes.get(ti + 1))[j];
-                }
-                // Leave ti alone.  The _next_ frame is still ti+1
-            }
-            ret.add(new Pair<>(time, transform));
-        }
-        return ret;
-    }
-*/
-
     @SuppressWarnings("unused")         // for Ignored data
     static private Bone readBone(LittleEndianDataInputStream stream, Map<String, Bone> boneMap,
                           Map<Bone, Integer> boneIdxMap) throws IOException {
