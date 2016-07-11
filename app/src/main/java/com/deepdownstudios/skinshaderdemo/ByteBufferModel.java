@@ -1,5 +1,7 @@
 package com.deepdownstudios.skinshaderdemo;
 
+import android.util.Pair;
+
 import com.deepdownstudios.util.Util;
 
 import java.nio.ByteBuffer;
@@ -29,22 +31,22 @@ public class ByteBufferModel {
 
         for(Mesh mesh : meshes) {
             // Vertices
-            // nVerts * (3 positions + 2 tex coords + 3 normals + 4 bone indices + 4 bone weights) * 4 bytes each
-            int nBytes = mesh.verts.length * (3 + 2 + 3 + 4 + 4) * BYTES_PER_FLOAT;
+            // nVerts * (3 positions + 2 tex coords + 3 normals + 2 floats representing four bone indices + 4 bone weights) * 4 bytes each
+            int nBytes = mesh.verts.length * (3 + 2 + 3 + 2 + 4) * BYTES_PER_FLOAT;
 
             // These buffers stay synchronized.  The FloatBuffer is just a thin view on the ByteBuffer.
             ByteBuffer vertByteBuffer = ByteBuffer.allocateDirect(nBytes).order(ByteOrder.nativeOrder());
             FloatBuffer vertFloatBuffer = vertByteBuffer.asFloatBuffer();
 
             for(Vertex vert : mesh.verts) {
-                // Batch 3+2+3+4+4 of the nio copy calls without trashing caches and such.
+                Pair<Integer, Integer> packedBones = packBoneIndices(vert);
+                // Batch 3+2+3+2+4 of the nio copy calls without trashing caches and such.
                 // Could probably afford increase the batch size...
                 float vertValues[] = {
                         (float)vert.pos[0], (float)vert.pos[1], (float)vert.pos[2],
                         (float)vert.texCoords[0], (float)vert.texCoords[1],
                         (float)vert.normal[0], (float)vert.normal[1], (float)vert.normal[2],
-                        (float)vert.getBone(0), (float)vert.getBone(1),
-                        (float)vert.getBone(2), (float)vert.getBone(3),
+                        (float)packedBones.first, (float)packedBones.second,
                         (float)vert.getBoneWeight(0), (float)vert.getBoneWeight(1),
                         (float)vert.getBoneWeight(2), (float)vert.getBoneWeight(3)
                 };
@@ -74,6 +76,18 @@ public class ByteBufferModel {
         }
 
         mSkeleton = skeleton;
+    }
+
+    /**
+     * @return
+     * ret.first is first two bones -- last 5 bits are bone 0, next 5 bits are bone 1 (mediump is guaranteed 10 bits)
+     * ret.second is the remaining two bones in a similar encoding.
+     */
+    private Pair<Integer, Integer> packBoneIndices(Vertex vert) {
+      int b0 = vert.getBone(0), b1 = vert.getBone(1),
+        b2 = vert.getBone(2), b3 = vert.getBone(3);
+      return new Pair<>(b1*32 + b0, b3*32 + b2);
+
     }
 
     public Skeleton mSkeleton;

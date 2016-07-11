@@ -351,7 +351,7 @@ public class VBOModel implements Model {
         SHADER_ATTRIB_INFO.put("aPosition", new Pair<>(3, GLES20.GL_FLOAT));
         SHADER_ATTRIB_INFO.put("aTexCoord", new Pair<>(2, GLES20.GL_FLOAT));
         SHADER_ATTRIB_INFO.put("aNormal", new Pair<>(3, GLES20.GL_FLOAT));
-        SHADER_ATTRIB_INFO.put("aBoneIndices", new Pair<>(4, GLES20.GL_FLOAT));
+        SHADER_ATTRIB_INFO.put("aBoneIndices", new Pair<>(2, GLES20.GL_FLOAT)); // 2 bones per float
         SHADER_ATTRIB_INFO.put("aBoneWeights", new Pair<>(4, GLES20.GL_FLOAT));
         mShaderStride = 0;
         for (Pair<Integer, Integer> info : SHADER_ATTRIB_INFO.values()) {

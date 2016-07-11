@@ -5,8 +5,9 @@ attribute highp vec3 aPosition;
 // model-space
 attribute mediump vec3 aNormal;
 attribute mediump vec2 aTexCoord;
-// TODO: PERFORMANCE: Pack into one float.
-attribute mediump vec4 aBoneIndices;
+// Each coordinate of aBoneIndices has 2 bones, each packed into 5 bits.
+// mediump guarantees 10 bits of precision.
+attribute mediump vec2 aBoneIndices;
 attribute mediump vec4 aBoneWeights;
 
 // uMVPMatrix = projection-space/view-space * view-space/world-space * world-space/model-space
@@ -31,7 +32,9 @@ varying mediump vec3 vNormal;
 varying mediump vec2 vTexCoord;
 
 void main() {
-    mediump ivec4 iBoneIndices = ivec4(aBoneIndices);
+    mediump ivec2 iBoneIndices2 = ivec2(aBoneIndices);
+    mediump ivec2 rem2 = iBoneIndices2/32;
+    mediump ivec4 iBoneIndices = ivec4(iBoneIndices2.x - rem2.x*32, rem2.x, iBoneIndices2.y - rem2.y*32, rem2.y);
     mediump vec4 boneWeights = aBoneWeights;
 
     // Write the weighted matrix sum to avoid extra calculations for 0-weight
