@@ -2,18 +2,17 @@ package com.deepdownstudios.skinshaderdemo;
 
 import android.opengl.GLES20;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.deepdownstudios.skinshaderdemo.Bones.GLSLBones;
+import com.deepdownstudios.skinshaderdemo.Bones.TransformStorage;
 
 import static com.deepdownstudios.skinshaderdemo.BasicModel.Animation;
-import static com.deepdownstudios.skinshaderdemo.BasicModel.Bone;
 import static com.deepdownstudios.skinshaderdemo.BasicModel.RigidTransform;
 import static com.deepdownstudios.skinshaderdemo.BasicModel.Skeleton;
 
 /**
- * Animated bones presented as matricies.
+ * Animated bones presented as matrices.
  */
-public class MatrixBones extends Bones {
+public class MatrixBones implements GLSLBones, TransformStorage {
     /**
      * Calculate bone pose.
      * @param animation The animation to apply or null for the default pose.
@@ -21,33 +20,22 @@ public class MatrixBones extends Bones {
      * @param delta     The time in the animation to set as pose, in seconds.  Ignored if animation == null.
      */
     public MatrixBones(Animation animation, Skeleton skeleton, double delta) {
-        List<Bone> bones = skeleton.bones;
-        mTforms = new float[bones.size() * 16];
-
-        List<Bone> bonesCopy = new ArrayList<>();
-        for (Bone bone: bones)
-            bonesCopy.add(bone.copy());
-
-        // Calculate the (potentially animated) bone-to-model matricies.
-        calculatePose(bonesCopy, animation, delta);
-
-        // MATH ALERT: Multiply the invBindPose transformations (which map model-to-bone-space, or bone/model)
-        // by mTforms (bone-to-model or model/bone).  So
-        // mTforms * invBindPose = model/bone * bone/model = a "unitless"
-        // transformation that has no inherent coordinate system.  Which is good because
-        // the skeletal transformation maps from a model space back into itself.
-        // In the shader, you then also apply MVP as you do to position any object.
-        for (int i=0; i<bonesCopy.size(); i++) {
-            Bone bone = bonesCopy.get(i);
-            Bone invBone = skeleton.invBindPose.get(i);
-            RigidTransform product = bone.transform.multiply(invBone.transform);
-            System.arraycopy(product.asMatrix(), 0, mTforms, 16*i, 16);
-        }
+        Bones.storeBoneTransforms(animation, skeleton, delta, this);
     }
 
     @Override
     public void postToGLSLUniform(int boneArrayId) {
         GLES20.glUniformMatrix4fv(boneArrayId, mTforms.length / 16, false, mTforms, 0);
+    }
+
+    @Override
+    public void allocateStorage(int nTransforms) {
+        mTforms = new float[nTransforms * 16];
+    }
+
+    @Override
+    public void storeTransform(int transformIdx, RigidTransform transform) {
+        System.arraycopy(transform.asMatrix(), 0, mTforms, 16*transformIdx, 16);
     }
 
     private float[] mTforms;

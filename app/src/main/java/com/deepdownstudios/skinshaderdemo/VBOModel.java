@@ -7,6 +7,7 @@ import android.opengl.Matrix;
 import android.util.Log;
 import android.util.Pair;
 
+import com.deepdownstudios.skinshaderdemo.Bones.GLSLBones;
 import com.deepdownstudios.util.Util;
 
 import java.io.BufferedReader;
@@ -131,7 +132,7 @@ public class VBOModel implements Model {
     }
 
     public void draw(float[] modelMatrix, float[] viewMatrix, float[] projMatrix,
-                     float[] eyeLightPos, Bones bones) {
+                     float[] eyeLightPos, GLSLBones bones) {
         GLES20.glUseProgram(mProgram);
         checkGlError("glUseProgram");
 

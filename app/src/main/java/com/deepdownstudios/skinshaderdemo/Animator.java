@@ -1,5 +1,6 @@
 package com.deepdownstudios.skinshaderdemo;
 
+import com.deepdownstudios.skinshaderdemo.Bones.GLSLBones;
 import com.deepdownstudios.util.Util;
 
 import static com.deepdownstudios.skinshaderdemo.BasicModel.*;
@@ -29,8 +30,8 @@ public enum Animator {
         }
     };
 
-    public Bones getBonesAtTime(Animation animation,
-                                Skeleton skeleton, double delta) {
+    public GLSLBones getBonesAtTime(Animation animation,
+                                          Skeleton skeleton, double delta) {
         switch (this) {
             case NORMAL:
                 return new MatrixBones(animation, skeleton, delta);

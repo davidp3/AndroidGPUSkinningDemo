@@ -5,6 +5,7 @@ import android.util.Pair;
 import com.deepdownstudios.skinshaderdemo.BasicModel.Animation;
 import com.deepdownstudios.skinshaderdemo.BasicModel.Bone;
 import com.deepdownstudios.skinshaderdemo.BasicModel.RigidTransform;
+import com.deepdownstudios.skinshaderdemo.BasicModel.Skeleton;
 import com.deepdownstudios.util.Util;
 
 import java.util.ArrayList;
@@ -13,23 +14,25 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Universal and abstract concept of a list of bones.  Specific implementations operate with
- * their own encodings of key parts of the mathematics.
+ * Static methods for handling bones.  Defines abstract routines for dealing with bones
+ * of varied internal format.
  */
-public abstract class Bones {
-    /**
-     * Post the list to GLES.
-     * @param boneArrayId   The GLES ID of the uniform shader variable that represents
-     *                      an array of bone matricies.
-     */
-    public abstract void postToGLSLUniform(int boneArrayId);
+public final class Bones {
+    public interface GLSLBones {
+        /**
+         * Post a list of bones to GLES.  The format is specified by this object.
+         * @param boneArrayId   The GLES ID of the uniform shader variable that represents
+         *                      an array of bone transformations.
+         */
+        void postToGLSLUniform(int boneArrayId);
+    }
 
     /**
      * Stores the inverse bind pose transformations in a new instance of the bone hierarchy.
      * @param bones The bone transformations in their bone-to-parent-bone-space bind configuration.
      * @return      A copy of the inverse bone transformations in their bone-to-model-space bind configuration.
      */
-    static List<Bone> calculateInvBindPose(List<Bone> bones) {
+    static public List<Bone> calculateInvBindPose(List<Bone> bones) {
         List<Bone> ret = new ArrayList<>(bones.size());
         for (Bone bone : bones) {
             ret.add(bone.copy());
@@ -63,7 +66,7 @@ public abstract class Bones {
      * @param bones         Bone structure, representing bone-to-parent transforms.
      *                      Changed on output to contain the bone-to-model-space transformations.
      */
-    static void calculatePose(List<Bone> bones) {
+    static public void calculatePose(List<Bone> bones) {
         calculatePose(bones, null, 0);
     }
 
@@ -74,7 +77,7 @@ public abstract class Bones {
      * @param animation     Animation to apply or none to return default pose.
      * @param delta         Time of animation to evaluate, in seconds.  Ignored if animation == null.
      */
-    static void calculatePose(List<Bone> bones, Animation animation, double delta) {
+    static public void calculatePose(List<Bone> bones, Animation animation, double delta) {
         for (int i=0; i<bones.size(); i++) {
             // Since the bones are listed in preorder, this bone's parent has already
             // been processed.
@@ -102,6 +105,55 @@ public abstract class Bones {
             // bone.transform = model/parent * parent/local-bone = model/local-bone
             // meaning the new transform maps from local bone coordinates to model coordinates.
             bone.transform = parent.transform.multiply(bone.transform);
+        }
+    }
+
+    /**
+     * An object that can store a list of bone transforms in its preferred form, whatever
+     * that may be.
+     */
+    public interface TransformStorage {
+        /**
+         * Called before any transforms are stored.
+         * @param nTransforms The number of transforms we will need room for.
+         */
+        void allocateStorage(int nTransforms);
+
+        /**
+         * Store `transform`, given as a RigidTransform (3D-translation + Quaternion) at index `transformIdx`.
+         */
+        void storeTransform(int transformIdx, RigidTransform transform);
+    }
+
+    /**
+     * Calculate bone transformations and store them in a TransformStorage.
+     * @param animation The animation to apply or null for the default pose.
+     * @param skeleton  The skeleton of the model to animate
+     * @param delta     The time in the animation to set as pose, in seconds.  Ignored if animation == null.
+     * @param ts        Abstract storage for transforms.  Can be used to store matrices, quats, ...
+     */
+    static public void storeBoneTransforms(Animation animation, Skeleton skeleton, double delta, TransformStorage ts) {
+        List<Bone> bones = skeleton.bones;
+        ts.allocateStorage(bones.size());
+
+        List<Bone> bonesCopy = new ArrayList<>();
+        for (Bone bone: bones)
+            bonesCopy.add(bone.copy());
+
+        // Calculate the (potentially animated) bone-to-model matrices.
+        calculatePose(bonesCopy, animation, delta);
+
+        // MATH ALERT: Multiply the invBindPose transformations (which map model-to-bone-space, or bone/model)
+        // by mTforms (bone-to-model or model/bone).  So
+        // mTforms * invBindPose = model/bone * bone/model = a "unitless"
+        // transformation that has no inherent coordinate system.  Which is good because
+        // the skeletal transformation maps from a model space back into itself.
+        // In the shader, you then also apply MVP as you do to position any object.
+        for (int i=0; i<bonesCopy.size(); i++) {
+            Bone bone = bonesCopy.get(i);
+            Bone invBone = skeleton.invBindPose.get(i);
+            RigidTransform product = bone.transform.multiply(invBone.transform);
+            ts.storeTransform(i, product);
         }
     }
 

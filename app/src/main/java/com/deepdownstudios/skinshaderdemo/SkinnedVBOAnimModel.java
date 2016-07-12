@@ -2,6 +2,8 @@ package com.deepdownstudios.skinshaderdemo;
 
 import android.annotation.SuppressLint;
 
+import com.deepdownstudios.skinshaderdemo.Bones.GLSLBones;
+
 import static com.deepdownstudios.skinshaderdemo.BasicModel.*;
 
 /**
@@ -53,7 +55,7 @@ public class SkinnedVBOAnimModel implements AnimModel {
     private Animation mAnimation;     // keyframes object for bones.  May or may not be uniform.
     private double mStartTime;            // value to consult as time of animation start, in seconds
     private Animator mAnimator;     // Type of bone matrix blending for this animation instance
-    private Bones mBones = null;        // bones at "current" time
+    private GLSLBones mBones = null;        // bones at "current" time
 
     @SuppressWarnings("unused")
     private static String TAG = "SkinnedVBOAnimModel";
